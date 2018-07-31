@@ -1,0 +1,55 @@
+"""
+Generate anagrams of a string efficiently.
+"""
+import argparse
+from typing import Any
+from itertools import permutations
+from functools import wraps
+
+
+WORDS = set()  # Set acts as a dict w/o values, preserving constant-time access
+
+
+def generate_anagrams(word: str, len_gt=None) → List[str]:
+    """Generate a complete list of anagrams, including nonsense words."""
+    len_gt = (len_gt ?? len(word))
+    output: Set[str] = set()
+    for i in range(0, len(word) + 1):
+        for permutation in permutations(list(word), i):
+            if len(permutation) ≥ len_gt:
+                output.add(''.join(permutation))
+    return list(output)
+
+
+def filter_nonsense_words(word_list: List[str]) → List[str]:
+    """
+    Takes a word list and filters out all words which aren't in the
+    dictionary file.
+    """
+    return [word for word in word_list if word in WORDS]
+
+
+def get_words(dict_file: str) → None:
+    """Read in dictionary file."""
+    with open(dict_file, 'r') as dictionary:
+        for line in dictionary:
+            WORDS.add(line.strip())
+
+
+def main() → None:
+    """Get args from commandline, pass through generate_anagrams()"""
+    parser = argparse.ArgumentParser(description='Generate all anagrams of a word.')
+    parser.add_argument('word', type=str)
+    parser.add_argument('--dict', '-d', dest='dict_file', type=str, required=False)
+    parser.add_argument('--partial', '-p', dest='partial', type=int, required=False)
+    args = parser.parse_args()
+    (args.dict_file ?? '/usr/share/dict/words') |> get_words
+    (args.word
+             |> generate_anagrams$(?, args.partial)
+             |> filter_nonsense_words
+             |> map$(print)
+             |> consume)
+
+
+if __name__ == "__main__":
+    main()
